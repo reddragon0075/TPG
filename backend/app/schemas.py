@@ -1064,3 +1064,91 @@ class StrategicLearningResponse(BaseModel):
     learning: str
     confidence: str
     affected_decisions: list[str]
+
+
+# ─── Customer Intelligence Schemas (PRD-0012) ─────────────────
+
+class SignalIngestRequest(BaseModel):
+    customer_id: str = Field(..., description="Customer or Organization ID")
+    source: str = Field(..., description="Source system (e.g. Zendesk, Salesforce)")
+    source_reference: str = Field(..., description="Source ticket or email ID")
+    raw_text: str = Field(..., description="Raw text of the customer signal")
+
+class SignalIngestResponse(BaseModel):
+    workspace_id: str
+    customer_id: str
+    source: str
+    source_reference: str
+    signal_type: str
+    summary: str
+    urgency: str
+    sentiment: str
+
+class ProblemExtractRequest(BaseModel):
+    signal: SignalIngestResponse
+
+class ProblemExtractResponse(BaseModel):
+    signal_id: str
+    problem_statement: str
+    affected_workflow: str
+    frequency: str
+    workaround_exists: bool
+
+class ImpactEstimateRequest(BaseModel):
+    problem: ProblemExtractResponse
+
+class ImpactEstimateResponse(BaseModel):
+    problem_statement: str
+    time_impact: str
+    cost_impact: str
+    revenue_impact: str
+    user_frustration: str
+    severity: str
+
+class OpportunityExtractRequest(BaseModel):
+    problem: ProblemExtractResponse
+
+class OpportunityExtractResponse(BaseModel):
+    problem_statement: str
+    potential_opportunity: str
+    strategic_alignment: str
+    confidence: str
+
+class ChurnRiskRequest(BaseModel):
+    signals: list[SignalIngestResponse]
+
+class ChurnRiskResponse(BaseModel):
+    customer_id: str
+    risk_level: str
+    primary_reason: str
+    contributing_factors: list[str]
+    recommended_action: str
+
+class FeatureEvalRequest(BaseModel):
+    raw_request: str
+
+class FeatureEvalResponse(BaseModel):
+    requested_feature: str
+    underlying_problem: str
+    is_genuine_problem: bool
+    alternative_solutions: list[str]
+
+class AccountSummaryRequest(BaseModel):
+    account_id: str
+    signals: list[SignalIngestResponse]
+
+class AccountSummaryResponse(BaseModel):
+    account_id: str
+    total_signals: int
+    primary_problems: list[str]
+    overall_sentiment: str
+    churn_risk: str
+
+class TraceRequest(BaseModel):
+    customer_id: str
+
+class TraceResponse(BaseModel):
+    customer_id: str
+    signals: list[str]
+    influenced_requirements: list[str]
+    shipped_features: list[str]
