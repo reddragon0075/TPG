@@ -19,6 +19,7 @@ from app.api.health import router as health_router
 from app.api.memory import router as memory_router
 from app.api.intelligence import router as intelligence_router
 from app.api.engineering import router as engineering_router
+from app.api.qa import router as qa_router
 
 
 settings = get_settings()
@@ -71,6 +72,7 @@ app.include_router(health_router)
 app.include_router(memory_router)
 app.include_router(intelligence_router)
 app.include_router(engineering_router)
+app.include_router(qa_router)
 
 
 # ─── Root ──────────────────────────────────────────────────────

@@ -693,5 +693,186 @@ class HandoffResponse(BaseModel):
     estimate_confidence: str
     risks: list[dict]
     open_questions: list[str]
+# ─── QA & Release Intelligence Schemas (PRD-0010) ──────────────
+
+
+class TestStrategyRequest(BaseModel):
+    prd_entity_id: str = Field(..., description="ID of the PRD entity")
+    prd_title: str = Field(..., description="Title of the PRD")
+    requirements: list[RequirementInput] = Field(..., description="Requirements to base strategy on")
+
+
+class TestStrategyResponse(BaseModel):
+    prd_entity_id: str
+    prd_title: str
+    risk_level: str
+    test_levels: list[str]
+    automation_required: bool
+    estimated_test_effort_hours: float
+    key_risk_areas: list[str]
+    testing_approach: str
+    exit_criteria: list[str]
+    assumptions: list[str]
+
+
+class TestCaseRequest(BaseModel):
+    requirement_ref: str = Field(..., description="Requirement reference")
+    requirement_text: str = Field(..., description="Requirement description")
+    acceptance_criteria: list[str] | None = Field(default=None)
+
+
+class TestCaseSchema(BaseModel):
+    test_case_id: str
+    requirement_ref: str
+    title: str
+    test_level: str
+    preconditions: list[str]
+    steps: list[str]
+    expected_result: str
+    scenario_type: str
+    priority: str
+    is_automatable: bool
+
+
+class TestCaseResponse(BaseModel):
+    requirement_ref: str
+    test_cases: list[TestCaseSchema]
+    total_cases: int
+
+
+class QualityRiskRequest(BaseModel):
+    requirement_ref: str = Field(..., description="Requirement reference")
+    requirement_text: str = Field(..., description="Requirement description")
+
+
+class QualityRiskResponse(BaseModel):
+    requirement_ref: str
+    requirement_text: str
+    impact: str
+    likelihood: str
+    uncertainty: str
+    risk_level: str
+    reasoning: str
+    recommended_test_depth: str
+
+
+class DefectRequest(BaseModel):
+    title: str = Field(..., description="Defect title")
+    description: str = Field(..., description="Defect description")
+    requirement_ref: str | None = Field(default=None)
+    severity: str = Field(default="MEDIUM", description="CRITICAL, HIGH, MEDIUM, LOW")
+    priority: str = Field(default="P2", description="P0, P1, P2, P3, P4")
+    steps_to_reproduce: list[str] = Field(..., description="Steps to reproduce")
+    expected_behavior: str = Field(..., description="Expected behavior")
+    actual_behavior: str = Field(..., description="Actual behavior")
+    environment: str = Field(default="staging")
+    is_regression: bool = Field(default=False)
+    root_cause_category: str | None = Field(default=None)
+
+
+class DefectResponse(BaseModel):
+    defect_id: str
+    title: str
+    severity: str
+    priority: str
+    is_regression: bool
+
+
+class DefectClassifyRequest(BaseModel):
+    description: str = Field(..., description="Defect description to classify")
+
+
+class DefectClassifyResponse(BaseModel):
+    severity: str
+    priority: str
+    is_regression: bool
+    root_cause_category: str
+    affected_component: str
+    similar_defects: list[str]
+
+
+class RegressionSetRequest(BaseModel):
+    change_scope: str = Field(..., description="Description of the change scope")
+    total_test_count: int = Field(default=100)
+
+
+class RegressionSetResponse(BaseModel):
+    change_scope: str
+    selected_test_count: int
+    test_categories: list[str]
+    rationale: str
+    estimated_execution_hours: float
+    risk_areas: list[str]
+
+
+class ReleaseReadinessRequest(BaseModel):
+    release_name: str = Field(..., description="Name of the release")
+    total_tests: int = Field(..., description="Total tests executed")
+    passed_tests: int = Field(..., description="Number of passed tests")
+    failed_tests: int = Field(..., description="Number of failed tests")
+    blocked_tests: int = Field(..., description="Number of blocked tests")
+    critical_defects: int = Field(..., description="Open critical defects")
+    high_defects: int = Field(..., description="Open high defects")
+    total_requirements: int = Field(..., description="Total requirements in scope")
+    covered_requirements: int = Field(..., description="Requirements with test coverage")
+
+
+class QualityGateSchema(BaseModel):
+    gate_name: str
+    criteria: str
+    status: str
+    evidence: str
+    override_reason: str | None
+    override_approver: str | None
+
+
+class ReleaseReadinessResponse(BaseModel):
+    release_name: str
+    overall_status: str
+    test_pass_rate: float
+    open_critical_defects: int
+    open_high_defects: int
+    coverage_percent: float
+    quality_gates: list[QualityGateSchema]
+    passed_gates: int
+    failed_gates: int
+    risks: list[str]
+    recommendation: str
+
+
+class CoverageRequest(BaseModel):
+    requirements: list[RequirementInput] = Field(..., description="Requirements in scope")
+    tested_requirements: list[str] = Field(..., description="List of requirement IDs that have test coverage")
+
+
+class CoverageResponse(BaseModel):
+    total_requirements: int
+    covered_requirements: int
+    uncovered_requirements: list[str]
+    coverage_percent: float
+    coverage_by_level: dict[str, int]
+    recommendation: str
+
+
+class TraceabilityResponse(BaseModel):
+    requirement_ref: str
+    requirement_text: str
+    linked_test_cases: list[str]
+    test_results: list[dict[str, str]]
+    is_fully_covered: bool
+
+
+class IncidentTraceRequest(BaseModel):
+    incident_description: str = Field(..., description="Description of the production incident")
+
+
+class IncidentTraceResponse(BaseModel):
+    incident_description: str
+    probable_root_cause: str
+    related_requirements: list[str]
+    test_gaps: list[str]
+    existing_tests: list[str]
+    recommended_new_tests: list[str]
+    quality_learning: str
 
 

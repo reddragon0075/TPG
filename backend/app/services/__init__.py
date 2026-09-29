@@ -6,6 +6,7 @@ Implements:
 - Product Decision Engine (PRD-0006)
 - PRD & Product Specification Engine (PRD-0008)
 - Engineering Intelligence Engine (PRD-0009)
+- QA & Release Intelligence Engine (PRD-0010)
 """
 
 from app.services.requirement_engine import (
@@ -53,6 +54,29 @@ from app.services.engineering_engine import (
     CapacityAnalysis,
     HandoffDocument,
 )
+from app.services.qa_engine import (
+    QAIntelligenceEngine,
+    QualityPhase,
+    TestLevel,
+    TestResult,
+    DefectSeverity,
+    DefectPriority,
+    RiskClassification,
+    QualityGateStatus,
+    ScenarioType,
+    TestStrategy,
+    TestScenario,
+    TestCase,
+    DefectRecord,
+    DefectClassification,
+    QualityRisk,
+    QualityGate,
+    RegressionSet,
+    CoverageReport,
+    TraceabilityRecord,
+    ReleaseReadiness,
+    IncidentTrace,
+)
 
 __all__ = [
     "RequirementIntelligenceEngine",
@@ -92,5 +116,26 @@ __all__ = [
     "EffortEstimate",
     "CapacityAnalysis",
     "HandoffDocument",
+    "QAIntelligenceEngine",
+    "QualityPhase",
+    "TestLevel",
+    "TestResult",
+    "DefectSeverity",
+    "DefectPriority",
+    "RiskClassification",
+    "QualityGateStatus",
+    "ScenarioType",
+    "TestStrategy",
+    "TestScenario",
+    "TestCase",
+    "DefectRecord",
+    "DefectClassification",
+    "QualityRisk",
+    "QualityGate",
+    "RegressionSet",
+    "CoverageReport",
+    "TraceabilityRecord",
+    "ReleaseReadiness",
+    "IncidentTrace",
 ]
 
