@@ -1,0 +1,82 @@
+"""
+TPG — The Product Guy
+
+FastAPI Application Entry Point
+
+This is the main server that powers TPG's intelligence.
+ChatGPT calls this via the Actions API. Every endpoint
+is workspace-scoped and API-key authenticated.
+"""
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import get_settings
+from app.database import engine, Base
+from app.api.health import router as health_router
+from app.api.memory import router as memory_router
+from app.api.intelligence import router as intelligence_router
+
+
+settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan manager.
+
+    Creates database tables on startup (dev mode).
+    Production should use Alembic migrations.
+    """
+    # Startup
+    if settings.environment == "development":
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    yield
+
+    # Shutdown
+    await engine.dispose()
+
+
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    description=(
+        "TPG Backend Intelligence Service. "
+        "Powers the Knowledge Graph, Connector Framework, "
+        "and Specialist Agent orchestration behind the "
+        "unified TPG identity in ChatGPT."
+    ),
+    lifespan=lifespan,
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
+)
+
+# ─── CORS ──────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ─── Routers ──────────────────────────────────────────────────
+app.include_router(health_router)
+app.include_router(memory_router)
+app.include_router(intelligence_router)
+
+
+# ─── Root ──────────────────────────────────────────────────────
+@app.get("/", include_in_schema=False)
+async def root():
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "status": "operational",
+        "docs": "/docs" if settings.debug else "disabled",
+    }
