@@ -876,3 +876,191 @@ class IncidentTraceResponse(BaseModel):
     quality_learning: str
 
 
+# ─── Analytics & Outcome Intelligence Schemas (PRD-0011) ──────────────
+
+class KPIRequest(BaseModel):
+    name: str = Field(..., description="KPI name")
+    description: str = Field(..., description="KPI description")
+    formula: str = Field(..., description="Calculation formula")
+    unit: str = Field(..., description="Unit of measurement")
+    baseline: float | None = None
+    target: float | None = None
+    measurement_period: str = "weekly"
+
+class KPIResponse(BaseModel):
+    name: str
+    description: str
+    formula: str
+    unit: str
+    baseline: float | None
+    target: float | None
+    measurement_period: str
+    status: str
+
+class EventRequest(BaseModel):
+    name: str = Field(..., description="Event name")
+    description: str = Field(..., description="Event description")
+    trigger: str = Field(..., description="Trigger condition")
+    properties: list[str] = Field(default_factory=list)
+    required_properties: list[str] = Field(default_factory=list)
+    source: str = "frontend"
+
+class EventResponse(BaseModel):
+    name: str
+    description: str
+    trigger: str
+    properties: list[str]
+    required_properties: list[str]
+    source: str
+
+class InstrumentationRequest(BaseModel):
+    prd_entity_id: str
+    requirements: list[RequirementInput]
+
+class InstrumentationResponse(BaseModel):
+    prd_entity_id: str
+    events: list[EventResponse]
+    identity_rules: list[str]
+    deduplication_rules: list[str]
+    acceptance_criteria: list[str]
+
+class OutcomeHypothesisRequest(BaseModel):
+    initiative_name: str
+    action: str
+    target_segment: str
+    expected_behavior_change: str
+    expected_outcome: str
+    primary_metric: str
+    guardrails: list[str]
+
+class OutcomeHypothesisResponse(BaseModel):
+    initiative_name: str
+    hypothesis_if: str
+    hypothesis_for_segment: str
+    hypothesis_then_behavior: str
+    hypothesis_which_improves: str
+    measured_by_metric: str
+    guardrails: list[str]
+
+class ExperimentRequest(BaseModel):
+    hypothesis: OutcomeHypothesisResponse
+    min_sample_size: int = 1000
+    duration_days: int = 14
+
+class ExperimentResponse(BaseModel):
+    hypothesis: OutcomeHypothesisResponse
+    target_population: str
+    control_variant: str
+    treatment_variant: str
+    primary_metric: str
+    secondary_metrics: list[str]
+    guardrails: list[str]
+    min_sample_size: int
+    duration_days: int
+    success_criteria: list[str]
+
+class ExperimentEvalRequest(BaseModel):
+    experiment_id: str
+    control_value: float
+    treatment_value: float
+    is_statistically_significant: bool
+    guardrails_passed: bool
+
+class ExperimentEvalResponse(BaseModel):
+    experiment_id: str
+    observed_effect: str
+    statistical_significance: bool
+    confidence_level: str
+    guardrails_ok: bool
+    decision: str
+    reasoning: str
+    learning: str
+
+class FunnelRequest(BaseModel):
+    steps: list[str]
+    users_at_steps: list[int]
+
+class FunnelResponse(BaseModel):
+    steps: list[str]
+    conversion_rates: list[float]
+    overall_conversion: float
+    largest_dropoff_step: str
+    anomaly_detected: bool
+    insights: list[str]
+
+class RetentionRequest(BaseModel):
+    cohort_name: str
+    d1_rate: float
+    d7_rate: float
+    d30_rate: float
+
+class RetentionResponse(BaseModel):
+    cohort_name: str
+    retention_d1: float
+    retention_d7: float
+    retention_d30: float
+    trend: str
+    insights: list[str]
+
+class FeatureAdoptionRequest(BaseModel):
+    feature_name: str
+    eligible_users: int
+    exposed_users: int
+    tried_users: int
+    retained_users: int
+
+class FeatureAdoptionResponse(BaseModel):
+    feature_name: str
+    eligible_users: int
+    exposed_users: int
+    tried_users: int
+    retained_users: int
+    adoption_rate: float
+    primary_state: str
+    recommendation: str
+
+class AnomalyRequest(BaseModel):
+    metric_name: str
+    baseline_value: float
+    observed_value: float
+
+class AnomalyResponse(BaseModel):
+    metric_name: str
+    baseline_value: float
+    observed_value: float
+    magnitude_pct: float
+    is_anomaly: bool
+    potential_causes: list[str]
+
+class CorrelationRequest(BaseModel):
+    anomaly: AnomalyResponse
+    recent_releases: list[str]
+
+class CorrelationResponse(BaseModel):
+    anomaly: AnomalyResponse
+    recent_releases: list[str]
+    correlation_strength: str
+    investigation_steps: list[str]
+
+class ScorecardRequest(BaseModel):
+    initiative_name: str
+    baseline: float
+    target: float
+    current: float
+    guardrail_violations: int = 0
+
+class ScorecardResponse(BaseModel):
+    initiative_name: str
+    baseline: float
+    target: float
+    current: float
+    progress_pct: float
+    status: str
+    guardrail_status: str
+    recommendation: str
+
+class StrategicLearningResponse(BaseModel):
+    source: str
+    learning: str
+    confidence: str
+    affected_decisions: list[str]
