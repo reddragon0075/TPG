@@ -416,3 +416,282 @@ class PRDSaveResponse(BaseModel):
     markdown_length: int
 
 
+# ─── Engineering Intelligence Schemas (PRD-0009) ──────────────
+
+
+class RequirementInput(BaseModel):
+    """A single requirement for technical analysis."""
+    id: str = Field(..., description="Requirement ID, e.g. FR-001")
+    text: str = Field(..., description="Requirement description")
+
+
+class EngineeringAnalyzeRequest(BaseModel):
+    prd_entity_id: str = Field(..., description="ID of the PRD entity in the Knowledge Graph")
+    prd_title: str = Field(..., description="Title of the PRD")
+    requirements: list[RequirementInput] = Field(..., description="List of functional requirements")
+
+
+class TechnicalImplicationSchema(BaseModel):
+    requirement_ref: str
+    requirement_text: str
+    affected_components: list[str]
+    new_components: list[str]
+    data_model_changes: list[str]
+    api_changes: list[str]
+    dependencies: list[str]
+    risks: list[str]
+    confidence: str = "inferred"
+
+
+class EngineeringAnalyzeResponse(BaseModel):
+    prd_entity_id: str
+    prd_title: str
+    phase: str
+    architecture_impact: str
+    total_affected_components: list[str]
+    total_new_components: list[str]
+    total_dependencies: list[str]
+    total_risks: list[str]
+    implications: list[TechnicalImplicationSchema]
+    recommendation: str
+
+
+class TechnicalDesignRequest(BaseModel):
+    prd_entity_id: str = Field(..., description="ID of the PRD entity")
+    title: str = Field(..., description="Title for the technical design")
+    requirements: list[RequirementInput] = Field(..., description="Requirements to analyze")
+    architecture_context: str | None = Field(default=None, description="Optional existing architecture notes")
+
+
+class ComponentSchema(BaseModel):
+    name: str
+    change_type: str
+    confidence: str = "inferred"
+
+
+class TechnicalDesignResponse(BaseModel):
+    title: str
+    architecture_context: str
+    existing_system: list[str]
+    proposed_changes: list[str]
+    components: list[ComponentSchema]
+    data_flow: list[str]
+    api_changes: list[dict]
+    data_model: list[dict]
+    events: list[str]
+    dependencies: list[str]
+    security_considerations: list[str]
+    scalability_notes: list[str]
+    failure_modes: list[dict]
+    observability: list[str]
+    migration_strategy: str
+    rollback_strategy: str
+    open_questions: list[str]
+
+
+class ADRAlternativeSchema(BaseModel):
+    name: str = Field(..., description="Alternative option name")
+    description: str = Field(..., description="Brief description of the alternative")
+    pros: list[str] = Field(default_factory=list)
+    cons: list[str] = Field(default_factory=list)
+
+
+class ADRCreateRequest(BaseModel):
+    title: str = Field(..., description="ADR title")
+    context: str = Field(..., description="Decision context")
+    alternatives: list[ADRAlternativeSchema] = Field(..., description="Options considered")
+    decision: str = Field(..., description="The decision made")
+    consequences: list[str] = Field(..., description="Consequences of the decision")
+    rationale: str = Field(..., description="Reasoning behind the decision")
+    related_prd_id: str | None = None
+    related_initiative_id: str | None = None
+
+
+class ADRCreateResponse(BaseModel):
+    adr_id: str
+    title: str
+    status: str
+    alternatives_count: int
+    consequences_count: int
+
+
+class BreakdownRequest(BaseModel):
+    prd_entity_id: str = Field(..., description="ID of the PRD entity")
+    prd_title: str = Field(..., description="Title of the PRD")
+    requirements: list[RequirementInput] = Field(..., description="Requirements to decompose")
+
+
+class StorySchema(BaseModel):
+    story_id: str
+    title: str
+    context: str
+    requirement_ref: str
+    acceptance_criteria: list[str]
+    dependencies: list[str] = Field(default_factory=list)
+    estimated_hours: float | None = None
+    estimate_confidence: str = "UNKNOWN"
+
+
+class EpicSchema(BaseModel):
+    epic_id: str
+    title: str
+    description: str
+    stories: list[StorySchema]
+
+
+class BreakdownResponse(BaseModel):
+    prd_entity_id: str
+    prd_title: str
+    epics: list[EpicSchema]
+    total_stories: int
+    total_estimated_hours: float
+    estimate_confidence: str
+
+
+class DependencySchema(BaseModel):
+    source_id: str
+    source_name: str
+    target_id: str
+    target_name: str
+    dependency_type: str
+    is_blocking: bool
+    description: str = ""
+
+
+class EffortEstimateRequest(BaseModel):
+    prd_entity_id: str = Field(..., description="ID of the PRD entity")
+    prd_title: str = Field(..., description="Title of the PRD")
+    requirements: list[RequirementInput] = Field(..., description="Requirements to estimate")
+    testing_multiplier: float = Field(default=0.3, ge=0.0, le=1.0)
+    integration_multiplier: float = Field(default=0.15, ge=0.0, le=1.0)
+    contingency_multiplier: float = Field(default=0.2, ge=0.0, le=1.0)
+
+
+class EffortEstimateResponse(BaseModel):
+    development_hours: float
+    testing_hours: float
+    integration_hours: float
+    migration_hours: float
+    deployment_hours: float
+    contingency_hours: float
+    total_hours: float
+    confidence: str
+    assumptions: list[str]
+
+
+class CapacityRequest(BaseModel):
+    available_hours: float = Field(..., description="Total available team hours")
+    prd_entity_id: str = Field(..., description="ID of the PRD entity")
+    prd_title: str = Field(..., description="Title of the PRD")
+    requirements: list[RequirementInput] = Field(..., description="Requirements")
+
+
+class CapacityResponse(BaseModel):
+    available_hours: float
+    required_hours: float
+    conflict_hours: float
+    has_conflict: bool
+    utilization_percent: float
+    recommendations: list[str]
+
+
+class TechDebtRequest(BaseModel):
+    component: str = Field(..., description="Affected component or module")
+    description: str = Field(..., description="Description of the technical debt")
+    severity: str = Field(default="MEDIUM", description="CRITICAL, HIGH, MEDIUM, LOW")
+    product_impact: str = Field(..., description="How this debt impacts the product")
+    business_cost: str = Field(..., description="Business cost of not addressing")
+    remediation: str = Field(..., description="Proposed remediation approach")
+    estimated_effort_hours: float | None = None
+    accumulated_since: str | None = None
+
+
+class TechDebtResponse(BaseModel):
+    tech_debt_id: str
+    component: str
+    severity: str
+    product_impact: str
+
+
+class TechRiskRequest(BaseModel):
+    risk: str = Field(..., description="Description of the technical risk")
+    likelihood: str = Field(default="MEDIUM", description="HIGH, MEDIUM, LOW")
+    impact: str = Field(default="MEDIUM", description="HIGH, MEDIUM, LOW")
+    mitigation: str = Field(..., description="Proposed mitigation")
+    owner: str = Field(default="Engineering")
+    related_component: str | None = None
+    related_initiative_id: str | None = None
+
+
+class TechRiskResponse(BaseModel):
+    risk_id: str
+    risk: str
+    likelihood: str
+    impact: str
+
+
+class DriftItemSchema(BaseModel):
+    requirement_ref: str
+    requirement_text: str
+    expected_status: str
+    actual_status: str
+    drift_type: str
+    details: str
+
+
+class DriftAnalysisResponse(BaseModel):
+    prd_entity_id: str
+    total_drift_items: int
+    drift_items: list[DriftItemSchema]
+
+
+class BlockerSchema(BaseModel):
+    blocked_entity_id: str
+    blocked_name: str
+    blocking_entity_id: str
+    blocking_name: str
+    blocked_since: str | None
+    age_days: int
+    severity: str
+
+
+class BlockerAnalysisResponse(BaseModel):
+    epic_entity_id: str
+    total_blockers: int
+    blockers: list[BlockerSchema]
+
+
+class HandoffRequest(BaseModel):
+    prd_entity_id: str = Field(..., description="ID of the PRD entity")
+    prd_title: str = Field(..., description="Title of the PRD")
+    requirements: list[RequirementInput] = Field(..., description="Requirements")
+    objective: str | None = Field(default=None, description="Engineering objective")
+
+
+class HandoffEpicSchema(BaseModel):
+    epic_id: str
+    title: str
+    story_count: int
+    stories: list[dict]
+
+
+class HandoffResponse(BaseModel):
+    initiative_name: str
+    prd_reference: str
+    objective: str
+    architecture_impact: str
+    affected_components: list[str]
+    new_components: list[str]
+    dependencies: list[str]
+    data_model_changes: list[str]
+    events: list[str]
+    observability: list[str]
+    rollback_strategy: str
+    epics: list[dict]
+    total_stories: int
+    total_estimated_hours: float
+    estimate_confidence: str
+    risks: list[dict]
+    open_questions: list[str]
+
+
