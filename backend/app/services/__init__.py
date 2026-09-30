@@ -4,9 +4,14 @@ TPG Domain Intelligence Services
 Implements:
 - Requirement Intelligence Engine (PRD-0005)
 - Product Decision Engine (PRD-0006)
+- Product Strategy & Roadmap Intelligence (PRD-0007)
 - PRD & Product Specification Engine (PRD-0008)
 - Engineering Intelligence Engine (PRD-0009)
 - QA & Release Intelligence Engine (PRD-0010)
+- Analytics & Outcome Intelligence Engine (PRD-0011)
+- Customer Intelligence Engine (PRD-0012)
+- Connector Framework Engine (PRD-0004)
+- Workspace & RBAC Security Service (PRD-0003)
 """
 
 from app.services.requirement_engine import (
@@ -77,6 +82,41 @@ from app.services.qa_engine import (
     ReleaseReadiness,
     IncidentTrace,
 )
+from app.services.analytics_engine import (
+    AnalyticsIntelligenceEngine,
+    MetricStatus,
+    ExperimentStatus,
+)
+from app.services.customer_engine import (
+    CustomerIntelligenceEngine,
+    SignalType,
+)
+from app.services.strategy_engine import (
+    StrategyIntelligenceEngine,
+    StrategicThemeData,
+    StrategicObjectiveData,
+    StrategicBetData,
+    StrategicAssumptionData,
+    TimeHorizon,
+    ObjectiveType,
+    BetLifecycleStatus,
+    AssumptionStatus,
+    RoadmapHorizon,
+    PortfolioCategory,
+)
+from app.services.connector_engine import (
+    ConnectorIntelligenceEngine,
+    CommitmentStatus,
+    InternalActionType,
+    DetectedCommitment,
+    IngestionBatchItem,
+)
+from app.services.workspace_service import (
+    WorkspaceService,
+    UserRole,
+    ResourceType,
+    ROLE_PERMISSIONS,
+)
 
 __all__ = [
     "RequirementIntelligenceEngine",
@@ -137,5 +177,29 @@ __all__ = [
     "TraceabilityRecord",
     "ReleaseReadiness",
     "IncidentTrace",
+    "AnalyticsIntelligenceEngine",
+    "MetricStatus",
+    "ExperimentStatus",
+    "CustomerIntelligenceEngine",
+    "SignalType",
+    "StrategyIntelligenceEngine",
+    "StrategicThemeData",
+    "StrategicObjectiveData",
+    "StrategicBetData",
+    "StrategicAssumptionData",
+    "TimeHorizon",
+    "ObjectiveType",
+    "BetLifecycleStatus",
+    "AssumptionStatus",
+    "RoadmapHorizon",
+    "PortfolioCategory",
+    "ConnectorIntelligenceEngine",
+    "CommitmentStatus",
+    "InternalActionType",
+    "DetectedCommitment",
+    "IngestionBatchItem",
+    "WorkspaceService",
+    "UserRole",
+    "ResourceType",
+    "ROLE_PERMISSIONS",
 ]
-

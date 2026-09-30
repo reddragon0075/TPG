@@ -46,8 +46,10 @@ class EntityType(str, Enum):
 
     # ── Phase 1: Strategy & Product ──
     STRATEGY = "strategy"
+    STRATEGIC_THEME = "strategic_theme"
     OBJECTIVE = "objective"
     STRATEGIC_BET = "strategic_bet"
+    ASSUMPTION = "assumption"
     INITIATIVE = "initiative"
     REQUIREMENT = "requirement"
     DECISION = "decision"

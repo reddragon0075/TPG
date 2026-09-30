@@ -103,3 +103,104 @@ async def test_intelligence_graph_query_endpoint(async_client):
     data = res.json()
     assert data["intent"] in ["why_decision", "lineage_trace", "general_search"]
     assert "Vendor Wallet" in data["narrative_summary"]
+
+
+@pytest.mark.asyncio
+async def test_strategy_api_endpoints(async_client):
+    # Create theme
+    theme_res = await async_client.post(
+        "/strategy/themes",
+        json={
+            "name": "Platform Modernization",
+            "description": "Migrate to modular event architecture.",
+            "priority": "HIGH",
+            "time_horizon": "6_12_MONTHS",
+        },
+    )
+    assert theme_res.status_code == 200
+    assert theme_res.json()["name"] == "Platform Modernization"
+
+    # Score alignment
+    align_res = await async_client.post(
+        "/strategy/align",
+        json={
+            "initiative_name": "Kafka Event Bus",
+            "problem_statement": "System needs scalable asynchronous messaging.",
+            "linked_theme": "Platform Modernization",
+            "linked_objective": "Sub-100ms latency",
+            "has_validated_evidence": True,
+        },
+    )
+    assert align_res.status_code == 200
+    assert align_res.json()["alignment_score"] >= 80.0
+
+    # Portfolio balance
+    bal_res = await async_client.post(
+        "/strategy/portfolio-balance",
+        json={"allocations": {"growth": 50.0, "retention": 30.0, "tech_debt": 20.0}},
+    )
+    assert bal_res.status_code == 200
+    assert bal_res.json()["status"] == "BALANCED"
+
+
+@pytest.mark.asyncio
+async def test_connector_api_endpoints(async_client):
+    # Register connector
+    conn_res = await async_client.post(
+        "/connectors",
+        json={
+            "connector_type": "slack",
+            "display_name": "Internal Ops Slack",
+            "config": {"channel": "#ops"},
+        },
+    )
+    assert conn_res.status_code == 200
+    assert conn_res.json()["connector_type"] == "slack"
+
+    # List connectors
+    list_res = await async_client.get("/connectors")
+    assert list_res.status_code == 200
+    assert len(list_res.json()) >= 1
+
+    # Detect commitment
+    commit_res = await async_client.post(
+        "/connectors/commitments/detect",
+        json={"text": "We will deliver the audit logs by next Wednesday."},
+    )
+    assert commit_res.status_code == 200
+    assert commit_res.json()["commitments_found"] >= 1
+
+    # Draft internal action
+    draft_res = await async_client.post(
+        "/connectors/actions/draft",
+        json={
+            "action_type": "EMAIL_DRAFT",
+            "target": "client@enterprise.com",
+            "context": "Customer requested update",
+            "user_intent": "Confirm deliverable timeline",
+        },
+    )
+    assert draft_res.status_code == 200
+    assert draft_res.json()["requires_human_approval"] is True
+
+
+@pytest.mark.asyncio
+async def test_workspace_api_endpoints(async_client):
+    # Workspace details
+    me_res = await async_client.get("/workspace/me")
+    assert me_res.status_code == 200
+    assert "owner_email" in me_res.json()
+
+    # Workspace stats
+    stats_res = await async_client.get("/workspace/stats")
+    assert stats_res.status_code == 200
+    assert "total_entities" in stats_res.json()
+
+    # RBAC check
+    rbac_res = await async_client.post(
+        "/workspace/rbac/check",
+        json={"role": "CEO", "resource": "budget"},
+    )
+    assert rbac_res.status_code == 200
+    assert rbac_res.json()["is_authorized"] is True
+

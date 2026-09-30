@@ -17,8 +17,10 @@ class EntityTypeEnum(str, Enum):
     FACT = "fact"
     WORKSPACE_CONFIG = "workspace_config"
     STRATEGY = "strategy"
+    STRATEGIC_THEME = "strategic_theme"
     OBJECTIVE = "objective"
     STRATEGIC_BET = "strategic_bet"
+    ASSUMPTION = "assumption"
     INITIATIVE = "initiative"
     REQUIREMENT = "requirement"
     DECISION = "decision"
@@ -1152,3 +1154,252 @@ class TraceResponse(BaseModel):
     signals: list[str]
     influenced_requirements: list[str]
     shipped_features: list[str]
+
+
+# ─── Strategy & Roadmap Schemas (PRD-0007) ───────────────────────
+
+class ThemeCreateRequest(BaseModel):
+    name: str = Field(..., description="Theme title, e.g. Enterprise Expansion")
+    description: str = Field(..., description="Theme rationale and focus")
+    priority: str = Field(default="HIGH")
+    time_horizon: str = Field(default="6_12_MONTHS")
+    success_metrics: list[str] = Field(default_factory=list)
+
+class ThemeResponse(BaseModel):
+    theme_id: str
+    name: str
+    description: str
+    priority: str
+    time_horizon: str
+    success_metrics: list[str]
+
+class ObjectiveCreateRequest(BaseModel):
+    name: str
+    theme_id: str | None = None
+    objective_type: str = "growth"
+    description: str = ""
+    baseline: float = 0.0
+    target: float = 0.0
+    unit: str = "%"
+    deadline: str | None = None
+    owner: str = "Product Office"
+
+class ObjectiveResponse(BaseModel):
+    objective_id: str
+    name: str
+    theme_id: str | None
+    objective_type: str
+    baseline: float
+    target: float
+    unit: str
+    deadline: str | None
+    owner: str
+
+class StrategicBetCreateRequest(BaseModel):
+    name: str
+    hypothesis: str
+    strategic_theme_id: str | None = None
+    expected_outcomes: list[str] = Field(default_factory=list)
+    investment_size: str = "MEDIUM"
+    assumptions: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    confidence: float = 0.70
+    status: str = "HYPOTHESIS"
+
+class StrategicBetResponse(BaseModel):
+    bet_id: str
+    name: str
+    hypothesis: str
+    strategic_theme_id: str | None
+    investment_size: str
+    confidence: float
+    status: str
+    expected_outcomes: list[str]
+
+class BetEvaluateRequest(BaseModel):
+    name: str
+    hypothesis: str
+    evidence_strength: float = 0.7
+    investment_size: str = "MEDIUM"
+    market_uncertainty: float = 0.5
+
+class BetEvaluateResponse(BaseModel):
+    bet_name: str
+    viability_score: float
+    recommendation: str
+    evidence_strength: float
+    market_uncertainty: float
+    validation_milestones: list[str]
+
+class AssumptionCreateRequest(BaseModel):
+    statement: str
+    category: str = "MARKET"
+    confidence: str = "MEDIUM"
+    validation_criteria: str = ""
+
+class AssumptionResponse(BaseModel):
+    assumption_id: str
+    statement: str
+    category: str
+    confidence: str
+    status: str
+
+class StrategicAlignRequest(BaseModel):
+    initiative_name: str
+    problem_statement: str
+    linked_theme: str | None = None
+    linked_objective: str | None = None
+    has_validated_evidence: bool = False
+
+class StrategicAlignResponse(BaseModel):
+    initiative_name: str
+    alignment_score: float
+    alignment_level: str
+    dimension_scores: dict[str, float]
+    gap_analysis: list[str]
+    is_constitutionally_sound: bool
+
+class RoadmapInitiativeItem(BaseModel):
+    id: str | None = None
+    name: str
+    theme: str | None = None
+    objective: str | None = None
+    status: str = "active"
+    confidence: str = "confirmed"
+    dependencies: list[str] = Field(default_factory=list)
+
+class RoadmapGenerateRequest(BaseModel):
+    initiatives: list[RoadmapInitiativeItem] | None = None
+
+class RoadmapResponse(BaseModel):
+    summary: str
+    horizons: dict[str, list[dict]]
+    total_initiatives: int
+    now_count: int
+    next_count: int
+    later_count: int
+
+class StrategicDriftRequest(BaseModel):
+    initiatives: list[RoadmapInitiativeItem]
+    active_themes: list[str]
+
+class StrategicDriftResponse(BaseModel):
+    total_initiatives: int
+    aligned_count: int
+    unaligned_count: int
+    drift_percentage: float
+    drift_level: str
+    aligned_initiatives: list[str]
+    unaligned_initiatives: list[str]
+    recommendations: list[str]
+
+class PortfolioBalanceRequest(BaseModel):
+    allocations: dict[str, float]
+
+class PortfolioBalanceResponse(BaseModel):
+    status: str
+    distribution: dict[str, float]
+    warnings: list[str]
+    is_sustainable: bool
+
+
+# ─── Connector Schemas (PRD-0004) ────────────────────────────────
+
+class ConnectorRegisterRequest(BaseModel):
+    connector_type: str = Field(..., description="gmail, slack, jira, github, calendar")
+    display_name: str
+    config: dict = Field(default_factory=dict)
+
+class ConnectorResponse(BaseModel):
+    connector_id: str
+    connector_type: str
+    display_name: str
+    status: str
+    config: dict
+
+class ConnectorSyncItem(BaseModel):
+    channel: str
+    sender: str
+    content: str
+    timestamp: str | None = None
+    thread_id: str | None = None
+    metadata: dict = Field(default_factory=dict)
+
+class ConnectorSyncRequest(BaseModel):
+    items: list[ConnectorSyncItem]
+
+class DetectedCommitmentSchema(BaseModel):
+    deliverable: str
+    owner: str
+    due_date: str | None
+    statement: str
+
+class ConnectorSyncResponse(BaseModel):
+    processed_count: int
+    signals_ingested: int
+    commitments_detected: int
+    detected_commitments: list[DetectedCommitmentSchema]
+
+class CommitmentDetectRequest(BaseModel):
+    text: str
+    default_owner: str = "Unknown"
+
+class CommitmentDetectResponse(BaseModel):
+    commitments_found: int
+    commitments: list[DetectedCommitmentSchema]
+
+class InternalActionDraftRequest(BaseModel):
+    action_type: str = Field(..., description="EMAIL_DRAFT, SLACK_DRAFT, JIRA_ISSUE_DRAFT, GITHUB_PR_COMMENT_DRAFT")
+    target: str
+    context: str
+    user_intent: str
+
+class InternalActionDraftResponse(BaseModel):
+    action_type: str
+    target: str
+    subject: str | None = None
+    summary: str | None = None
+    issue_type: str | None = None
+    draft_body: str
+    requires_human_approval: bool
+    dispatched: bool
+
+
+# ─── Workspace & RBAC Schemas (PRD-0003) ─────────────────────────
+
+class WorkspaceInfoResponse(BaseModel):
+    workspace_id: str
+    name: str
+    owner_email: str
+    owner_name: str
+    workspace_type: str
+    created_at: str | None
+
+class WorkspaceStatsResponse(BaseModel):
+    workspace_id: str
+    total_entities: int
+    total_relationships: int
+    total_connectors: int
+    entities_by_type: dict[str, int]
+
+class WorkspaceExportResponse(BaseModel):
+    exported_at: str
+    workspace_id: str
+    entities: list[dict]
+    relationships: list[dict]
+
+class WorkspaceResetResponse(BaseModel):
+    workspace_id: str
+    deleted_entities_count: int
+    status: str
+
+class RBACCheckRequest(BaseModel):
+    role: str = Field(..., description="CEO, SR_PM, JR_PM, QA_LEAD, VIEWER")
+    resource: str = Field(..., description="roadmap, prd, client_contracts, budget, sprint_analytics, decisions")
+
+class RBACCheckResponse(BaseModel):
+    role: str
+    resource: str
+    permission_level: str
+    is_authorized: bool
+

@@ -22,6 +22,9 @@ from app.api.engineering import router as engineering_router
 from app.api.qa import router as qa_router
 from app.api.analytics import router as analytics_router
 from app.api.customer import router as customer_router
+from app.api.strategy import router as strategy_router
+from app.api.connectors import router as connectors_router
+from app.api.workspace import router as workspace_router
 
 
 settings = get_settings()
@@ -77,6 +80,9 @@ app.include_router(engineering_router)
 app.include_router(qa_router)
 app.include_router(analytics_router)
 app.include_router(customer_router)
+app.include_router(strategy_router)
+app.include_router(connectors_router)
+app.include_router(workspace_router)
 
 
 # ─── Root ──────────────────────────────────────────────────────
