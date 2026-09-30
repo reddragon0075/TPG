@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1536
 
     model_config = {
-        "env_file": ".env",
+        "env_file": ("backend/.env", ".env"),
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
     }

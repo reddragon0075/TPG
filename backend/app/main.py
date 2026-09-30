@@ -23,6 +23,7 @@ from app.api.qa import router as qa_router
 from app.api.analytics import router as analytics_router
 from app.api.customer import router as customer_router
 from app.api.strategy import router as strategy_router
+from app import models as _models  # noqa: F401
 from app.api.connectors import router as connectors_router
 from app.api.workspace import router as workspace_router
 
