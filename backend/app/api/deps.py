@@ -17,24 +17,35 @@ settings = get_settings()
 
 
 async def verify_api_key(
-    x_api_key: str = Header(..., alias="X-API-Key"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None),
 ) -> str:
     """
     Verify the API key sent by ChatGPT Actions.
 
-    In V1, this is a simple shared secret. Future versions
-    may use JWT or OAuth for richer authentication.
+    Supports X-API-Key header, Authorization: Bearer token,
+    or development fallback if debug=True.
     """
+    token = x_api_key
+    if not token and authorization:
+        if authorization.lower().startswith("bearer "):
+            token = authorization[7:].strip()
+        else:
+            token = authorization.strip()
+
     if not settings.api_key:
-        # No API key configured — development mode
         return "dev"
 
-    if x_api_key != settings.api_key:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid API key",
-        )
-    return x_api_key
+    if token == settings.api_key:
+        return token
+
+    if settings.debug and not token:
+        return "dev"
+
+    raise HTTPException(
+        status_code=401,
+        detail="Invalid API key",
+    )
 
 
 async def get_workspace_id(

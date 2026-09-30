@@ -134,7 +134,7 @@ def build_curated_spec():
         },
         "servers": [
             {
-                "url": "https://hb9xm0-ip-49-37-233-155.tunnelmole.net",
+                "url": "https://oqvzoo-ip-49-37-233-155.tunnelmole.net",
                 "description": "TPG Live Intelligence Backend"
             }
         ],
