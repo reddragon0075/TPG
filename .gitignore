@@ -40,3 +40,7 @@ dump.rdb
 # Testing
 .pytest_cache/
 
+# Local tools and binaries
+tools/
+*.exe
+

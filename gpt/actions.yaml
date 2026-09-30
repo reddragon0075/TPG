@@ -5,6 +5,9 @@ info:
     Framework, and Specialist Agent orchestration behind the unified TPG identity
     in ChatGPT.
   version: 0.1.0
+servers:
+  - url: https://carriers-crafts-inflation-zealand.trycloudflare.com
+    description: TPG Live Intelligence Backend (Cloudflare Tunnel)
 paths:
   /health:
     get:
