@@ -134,8 +134,8 @@ def build_curated_spec():
         },
         "servers": [
             {
-                "url": "https://carriers-crafts-inflation-zealand.trycloudflare.com",
-                "description": "TPG Live Intelligence Backend (Cloudflare Tunnel)"
+                "url": "https://hb9xm0-ip-49-37-233-155.tunnelmole.net",
+                "description": "TPG Live Intelligence Backend"
             }
         ],
         "security": [

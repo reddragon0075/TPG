@@ -6,8 +6,8 @@ info:
     in ChatGPT.
   version: 0.1.0
 servers:
-- url: https://carriers-crafts-inflation-zealand.trycloudflare.com
-  description: TPG Live Intelligence Backend (Cloudflare Tunnel)
+- url: https://hb9xm0-ip-49-37-233-155.tunnelmole.net
+  description: TPG Live Intelligence Backend
 security:
 - ApiKeyAuth: []
 paths:
