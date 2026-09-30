@@ -3,10 +3,15 @@ Export Curated OpenAPI Specification for ChatGPT Custom Actions
 
 OpenAI Custom GPT enforces a strict platform limit:
   "OpenAPI spec can have a maximum of 30 operations"
+And warns on custom header parameters:
+  "parameter X-... has location header; ignoring"
 
-This script extracts 25 flagship operations covering all 10 domain
-intelligence engines, prunes unreferenced schemas to keep the spec lean,
-and outputs a compliant gpt/actions.yaml ready for ChatGPT.
+This script:
+1. Extracts 27 flagship operations covering all 10 domain intelligence engines.
+2. Removes unhandled header parameters to produce zero schema warnings in ChatGPT.
+3. Injects proper securitySchemes (ApiKeyAuth via X-API-Key).
+4. Prunes unreferenced schemas to keep the spec lean.
+5. Injects the active Cloudflare Tunnel URL.
 """
 
 import os
@@ -16,8 +21,6 @@ from app.main import app
 def build_curated_spec():
     raw_spec = app.openapi()
 
-    # Exact curated list of operation IDs / paths & methods
-    # Targeting ~25 operations across all 10 specializations
     TARGET_ENDPOINTS = [
         # 1. System & Workspace (2 operations)
         ("/health", "get"),
@@ -79,7 +82,15 @@ def build_curated_spec():
         if path not in filtered_paths:
             filtered_paths[path] = {}
         
-        filtered_paths[path][method] = raw_spec["paths"][path][method]
+        op_def = dict(raw_spec["paths"][path][method])
+        
+        # Remove header parameters (OpenAI warns on non-auth header parameters)
+        if "parameters" in op_def:
+            op_def["parameters"] = [p for p in op_def["parameters"] if p.get("in") != "header"]
+            if not op_def["parameters"]:
+                del op_def["parameters"]
+        
+        filtered_paths[path][method] = op_def
         total_ops += 1
 
     print(f"Total curated paths: {len(filtered_paths)}")
@@ -127,24 +138,29 @@ def build_curated_spec():
                 "description": "TPG Live Intelligence Backend (Cloudflare Tunnel)"
             }
         ],
+        "security": [
+            {"ApiKeyAuth": []}
+        ],
         "paths": filtered_paths,
         "components": {
-            "schemas": pruned_schemas
+            "schemas": pruned_schemas,
+            "securitySchemes": {
+                "ApiKeyAuth": {
+                    "type": "apiKey",
+                    "in": "header",
+                    "name": "X-API-Key"
+                }
+            }
         }
     }
 
     output_dir = "gpt"
     os.makedirs(output_dir, exist_ok=True)
 
-    # Backup the full spec
-    with open(os.path.join(output_dir, "actions.all.yaml"), "w", encoding="utf-8") as f:
-        yaml.dump(raw_spec, f, sort_keys=False, allow_unicode=True)
-
-    # Save the curated 27-operation spec
     with open(os.path.join(output_dir, "actions.yaml"), "w", encoding="utf-8") as f:
         yaml.dump(curated_spec, f, sort_keys=False, allow_unicode=True)
 
-    print("Successfully exported 27 curated actions to gpt/actions.yaml and backed up full spec to gpt/actions.all.yaml!")
+    print("Successfully exported clean, warning-free actions to gpt/actions.yaml!")
 
 if __name__ == "__main__":
     build_curated_spec()

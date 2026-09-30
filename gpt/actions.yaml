@@ -8,6 +8,8 @@ info:
 servers:
 - url: https://carriers-crafts-inflation-zealand.trycloudflare.com
   description: TPG Live Intelligence Backend (Cloudflare Tunnel)
+security:
+- ApiKeyAuth: []
 paths:
   /health:
     get:
@@ -35,13 +37,6 @@ paths:
       summary: Get Current Workspace
       description: Retrieves profile details for the current active workspace.
       operationId: get_current_workspace_workspace_me_get
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       responses:
         '200':
           description: Successful Response
@@ -67,13 +62,6 @@ paths:
 
         ChatGPT calls this whenever TPG needs to remember something.'
       operationId: store_knowledge_memory_store_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -105,13 +93,6 @@ paths:
 
         Phase 1: Will add semantic search via pgvector embeddings.'
       operationId: recall_knowledge_memory_recall_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -145,12 +126,6 @@ paths:
         schema:
           type: string
           title: Entity Id
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       responses:
         '200':
           description: Successful Response
@@ -179,12 +154,6 @@ paths:
         schema:
           type: string
           title: Entity Id
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       responses:
         '200':
           description: Successful Response
@@ -213,13 +182,6 @@ paths:
 
         - ''Trace the provenance of initiative X'''
       operationId: graph_query_intelligence_graph_query_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -277,13 +239,6 @@ paths:
       description: Ingests a requirement into the Knowledge Graph with provenance
         tracking.
       operationId: ingest_requirement_intelligence_requirements_ingest_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -340,13 +295,6 @@ paths:
       description: Formulates a permanent ADR (Decision Record) and stores it in the
         Knowledge Graph.
       operationId: record_decision_intelligence_decisions_record_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -432,13 +380,6 @@ paths:
       description: Drafts and permanently saves an immutable PRD in the Knowledge
         Graph with version management.
       operationId: save_prd_specification_intelligence_prd_save_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -491,13 +432,6 @@ paths:
       summary: Generate Living Roadmap
       description: Sequences initiatives into living Now/Next/Later roadmap horizons.
       operationId: generate_living_roadmap_strategy_roadmap_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -552,13 +486,6 @@ paths:
         new components needed, dependencies, and technical risks. Does NOT invent
         architecture — only surfaces evidence-based implications.
       operationId: analyze_prd_engineering_analyze_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -586,13 +513,6 @@ paths:
       description: Breaks a PRD into Epics → Stories → Subtasks with acceptance criteria
         and effort estimates. Each story traces back to a specific requirement.
       operationId: decompose_prd_engineering_breakdown_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -621,13 +541,6 @@ paths:
         analysis, engineering breakdown, effort estimates, risks, and observability
         requirements.
       operationId: generate_handoff_engineering_handoff_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -654,13 +567,6 @@ paths:
       summary: Generate Test Strategy
       description: Generates a risk-based test strategy for a PRD.
       operationId: generate_test_strategy_qa_test_strategy_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -688,13 +594,6 @@ paths:
       description: Generates positive, negative, boundary, and error test cases from
         a requirement.
       operationId: derive_test_cases_qa_test_cases_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -722,13 +621,6 @@ paths:
       description: Evidence-based release readiness assessment evaluating multiple
         quality gates.
       operationId: assess_release_readiness_qa_release_readiness_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -754,13 +646,6 @@ paths:
       - Analytics & Outcome Intelligence
       summary: Define Kpi
       operationId: define_kpi_analytics_kpi_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -786,13 +671,6 @@ paths:
       - Analytics & Outcome Intelligence
       summary: Evaluate Scorecard
       operationId: evaluate_scorecard_analytics_scorecard_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -818,13 +696,6 @@ paths:
       - Customer Intelligence
       summary: Ingest Signal
       operationId: ingest_signal_customer_signals_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -850,13 +721,6 @@ paths:
       - Customer Intelligence
       summary: Extract Problem
       operationId: extract_problem_customer_problems_extract_post
-      parameters:
-      - name: X-Workspace-ID
-        in: header
-        required: false
-        schema:
-          type: string
-          title: X-Workspace-Id
       requestBody:
         required: true
         content:
@@ -2956,3 +2820,8 @@ components:
       - workspace_type
       - created_at
       title: WorkspaceInfoResponse
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
