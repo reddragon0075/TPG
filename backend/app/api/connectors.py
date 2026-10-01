@@ -10,11 +10,14 @@ Endpoints:
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.database import get_db
 from app.api.deps import get_workspace_id
-from app.models.connector import ConnectorType
+from app.models.workspace import Workspace
+from app.models.connector import Connector, ConnectorType
 from app.services.connector_engine import (
     ConnectorIntelligenceEngine,
     IngestionBatchItem,
@@ -42,6 +45,20 @@ async def register_connector(
     db: AsyncSession = Depends(get_db),
 ):
     """Registers an authorized connector for the current workspace."""
+    settings = get_settings()
+    ws = await db.get(Workspace, workspace_id)
+    if ws and ws.connectors_limit > 0:
+        count_stmt = select(func.count(Connector.id)).where(Connector.workspace_id == workspace_id)
+        current_count = (await db.execute(count_stmt)).scalar() or 0
+        if current_count >= ws.connectors_limit:
+            raise HTTPException(
+                status_code=402,
+                detail=(
+                    f"Connector limit reached ({current_count}/{ws.connectors_limit} connectors for {ws.subscription_tier} tier). "
+                    f"Please upgrade your commercial subscription at {settings.billing_portal_url} to add more connectors."
+                ),
+            )
+
     engine = ConnectorIntelligenceEngine(db=db, workspace_id=workspace_id)
     try:
         c_type = ConnectorType(request.connector_type.lower())

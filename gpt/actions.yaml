@@ -2811,6 +2811,20 @@ components:
           - type: string
           - type: 'null'
           title: Created At
+        subscription_tier:
+          type: string
+          title: Subscription Tier
+        subscription_status:
+          type: string
+          title: Subscription Status
+        days_remaining:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Days Remaining
+        is_license_active:
+          type: boolean
+          title: Is License Active
       type: object
       required:
       - workspace_id

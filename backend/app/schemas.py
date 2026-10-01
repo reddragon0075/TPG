@@ -1374,6 +1374,13 @@ class WorkspaceInfoResponse(BaseModel):
     owner_name: str
     workspace_type: str
     created_at: str | None
+    subscription_tier: str = "pro"
+    subscription_status: str = "active"
+    valid_until: str | None = None
+    days_remaining: int | None = None
+    is_license_active: bool = True
+    entities_limit: int = 5000
+    connectors_limit: int = 10
 
 class WorkspaceStatsResponse(BaseModel):
     workspace_id: str
@@ -1402,4 +1409,54 @@ class RBACCheckResponse(BaseModel):
     resource: str
     permission_level: str
     is_authorized: bool
+
+
+# ─── Commercial Licensing & SaaS Paywall Schemas ───────────────────
+
+class CommercialLicenseProvisionRequest(BaseModel):
+    owner_email: str = Field(..., description="Customer work email address")
+    owner_name: str = Field(..., description="Customer full name")
+    company_name: str = Field(default="Product Office", description="Organization or workspace name")
+    subscription_tier: str = Field(default="pro", description="Tier: trial, starter, pro, enterprise")
+    duration_days: int = Field(default=365, description="Validity period in days")
+    stripe_customer_id: str | None = Field(default=None, description="Optional Stripe customer reference")
+
+class CommercialLicenseProvisionResponse(BaseModel):
+    workspace_id: str
+    license_key: str
+    owner_email: str
+    owner_name: str
+    company_name: str
+    subscription_tier: str
+    subscription_status: str
+    valid_until: str | None
+    entities_limit: int
+    connectors_limit: int
+    setup_instructions: str
+
+class CommercialLicenseStatusResponse(BaseModel):
+    workspace_id: str
+    owner_email: str
+    owner_name: str
+    company_name: str
+    subscription_tier: str
+    subscription_status: str
+    license_key_masked: str
+    valid_until: str | None
+    days_remaining: int | None
+    is_valid: bool
+    status_message: str
+    entities_count: int
+    entities_limit: int
+    connectors_count: int
+    connectors_limit: int
+    billing_portal_url: str
+
+class CommercialLicenseRenewRequest(BaseModel):
+    extend_days: int = Field(default=365, description="Number of days to extend subscription")
+    new_tier: str | None = Field(default=None, description="Optional tier change (trial, starter, pro, enterprise)")
+
+class CommercialLicenseRevokeRequest(BaseModel):
+    reason: str = Field(default="canceled", description="Reason: canceled, expired, or suspended")
+
 

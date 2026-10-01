@@ -576,21 +576,29 @@ Users experience one continuous TPG regardless of channel.
 
 ---
 
-# Commercial Model
+# Commercial Model & Monetization Architecture
 
-## Individual Subscription
-One Personal Workspace.  
-Private product office.
+TPG operates as a commercial managed Cloud SaaS with strict subscription and license key verification.
 
-## Organization Subscription
-Shared organizational workspace with hierarchy.
+## Commercial Editions & Tiers
 
-Examples:
-* taSki
-* Axiom
-* Enterprise customers
+| Tier | Target Persona | Quotas (Entities / Connectors) | Commercial Gating |
+| :--- | :--- | :--- | :--- |
+| **Trial (14-Day)** | New Evaluators | 500 nodes / 2 connectors | 14-day strict expiration cutoff |
+| **Starter** | Solo Founders & Indie Hackers | 1,500 nodes / 3 connectors | Monthly recurring billing |
+| **Pro (Flagship)** | Senior Product Managers & CPOs | 10,000 nodes / 10 connectors | Full Decision Engine + PRD Suite + Lineage |
+| **Enterprise** | Corporate Product Offices | 100,000+ nodes / 50 connectors | Multi-connector graph sync + Priority SLA |
 
-One user may belong to multiple organizations while retaining one completely private workspace.
+## Strict Subscription Paywall
+
+1. **Authentication by Secret License Key**: Every commercial customer receives a unique 128-bit key (`tpg_live_<32-hex>`) upon subscription. All requests from ChatGPT Actions or external webhooks must present this key via `Authorization: Bearer <key>`.
+2. **Per-Request Validation**: Gateway intercepts all traffic at `app.api.deps:get_workspace_id`.
+   - Missing or unknown key $\to$ `HTTP 401 Unauthorized`
+   - Expired or unpaid subscription $\to$ `HTTP 402 Payment Required`
+   - Suspended account $\to$ `HTTP 403 Forbidden`
+   - Quota limit exceeded $\to$ `HTTP 402 Payment Required`
+3. **Automated Billing Sync**: Integrated Stripe webhooks automatically extend subscription periods upon successful payment (`invoice.payment_succeeded`) and revoke licenses upon cancellation (`customer.subscription.deleted`).
+4. **Data Isolation Guarantee**: One subscription = one isolated Personal Workspace. Zero cross-tenant data leakage.
 
 ---
 

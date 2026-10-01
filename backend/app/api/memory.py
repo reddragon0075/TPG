@@ -15,7 +15,9 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import get_settings
 from app.database import get_db
+from app.models.workspace import Workspace
 from app.models.entity import (
     Entity,
     EntityRelationship,
@@ -55,6 +57,21 @@ async def store_knowledge(
     This is the primary write path for all product intelligence.
     ChatGPT calls this whenever TPG needs to remember something.
     """
+    # Enforce commercial tier entity limit
+    settings = get_settings()
+    ws = await db.get(Workspace, workspace_id)
+    if ws and ws.entities_limit > 0:
+        count_stmt = select(func.count(Entity.id)).where(Entity.workspace_id == workspace_id)
+        current_count = (await db.execute(count_stmt)).scalar() or 0
+        if current_count >= ws.entities_limit:
+            raise HTTPException(
+                status_code=402,
+                detail=(
+                    f"Entity limit reached ({current_count}/{ws.entities_limit} entities for {ws.subscription_tier} tier). "
+                    f"Please upgrade your commercial subscription at {settings.billing_portal_url} to store more knowledge."
+                ),
+            )
+
     entity = Entity(
         workspace_id=workspace_id,
         entity_type=EntityType(request.entity_type.value),

@@ -40,7 +40,27 @@ class Settings(BaseSettings):
     # ─── Security ──────────────────────────────────────────────
     api_key: str = Field(
         default="",
-        description="API key for authenticating ChatGPT Actions",
+        description="Default fallback / internal developer API key",
+    )
+    admin_api_key: str = Field(
+        default="",
+        description="Master admin API key for issuing and managing commercial licenses",
+    )
+    enforce_commercial_licensing: bool = Field(
+        default=True,
+        description="Strictly enforce valid commercial license on API requests",
+    )
+    billing_portal_url: str = Field(
+        default="https://tpg.skynetorg.com/pricing",
+        description="URL where customers can manage or renew their commercial subscription",
+    )
+    support_email: str = Field(
+        default="support@skynetorg.com",
+        description="Support email for billing and account inquiries",
+    )
+    stripe_webhook_secret: str = Field(
+        default="",
+        description="Secret for validating Stripe billing webhooks",
     )
     cors_origins: list[str] = ["https://chat.openai.com", "https://chatgpt.com"]
 

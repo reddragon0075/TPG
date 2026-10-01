@@ -62,32 +62,54 @@ Those capabilities belong to the future Business Edition.
 
 ---
 
-# 3. Identity Architecture
+# 3. Identity & Commercial Subscription Architecture
 
-Every customer has exactly one global Skynet identity.
+Every customer has exactly one global Skynet identity linked to their dedicated commercial Personal Workspace.
 
-## User Identity Object
+## User Identity & Subscription Object
 
-| Field         | Description                |
-| ------------- | -------------------------- |
-| user_id       | Global UUID                |
-| full_name     | User display name          |
-| email         | Login identity             |
-| auth_provider | Google / Microsoft / Email |
-| subscription  | Free / Pro                 |
-| workspace_id  | Personal Workspace UUID    |
+| Field               | Type      | Description                                                    |
+| ------------------- | --------- | -------------------------------------------------------------- |
+| user_id             | UUID      | Global customer identity UUID                                  |
+| full_name           | String    | User display name                                              |
+| email               | String    | Login / billing identity (unique)                              |
+| subscription_tier   | Enum      | Commercial tier: `trial`, `starter`, `pro`, `enterprise`       |
+| subscription_status | Enum      | Billing status: `trialing`, `active`, `past_due`, `canceled`, `expired` |
+| license_key         | String    | Cryptographically secure Bearer token (`tpg_live_...`)         |
+| valid_until         | Timestamp | Commercial expiration date (UTC)                               |
+| trial_ends_at       | Timestamp | 14-day free trial cutoff date                                  |
+| entities_limit      | Integer   | Max Knowledge Graph entities allowed under tier                |
+| connectors_limit    | Integer   | Max simultaneous external tools connected                      |
+| stripe_customer_id  | String    | External Stripe billing identifier                             |
+| workspace_id        | UUID      | Isolated Personal Workspace UUID                               |
 
-### Example Identity
+### Commercial Tier Matrix
 
-```text
-user_id: usr_ab123
-full_name: Abhijith Vijayan
-email: xxx@email.com
-subscription: Pro
-workspace_id: ws_personal_ab123
+| Dimension          | Trial (14 Days) | Starter Plan   | Pro Plan (Flagship) | Enterprise Edition |
+| ------------------ | --------------- | -------------- | ------------------- | ------------------ |
+| Target User        | Evaluation      | Solo Founder   | Senior PM / CPO     | Autonomous Product Office |
+| Entity Quota       | 500 nodes       | 1,500 nodes    | 10,000 nodes        | 100,000+ nodes     |
+| Connector Quota    | 2 connectors    | 3 connectors   | 10 connectors       | Unlimited (50+)    |
+| Decision Engine    | Standard        | Full           | Full + Lineage      | Executive ADR + Multi-Org |
+| PRD Generation     | 5 PRDs          | Unlimited      | Unlimited           | Unlimited          |
+| Support SLA        | Community       | Email (48h)    | Priority (12h)      | Dedicated Executive Slack |
+
+### Example Active Identity
+
+```yaml
+user_id: "usr_ab123"
+full_name: "Abhijith Vijayan"
+email: "abhijith@skynetorg.com"
+subscription_tier: "pro"
+subscription_status: "active"
+license_key: "tpg_live_9f8c2b1a3e4d5f6a7b8c9d0e1f2a3b4c"
+valid_until: "2027-10-01T00:00:00Z"
+entities_limit: 10000
+connectors_limit: 10
+workspace_id: "ws_personal_ab123"
 ```
 
-The identity never changes, even if the user later upgrades to the Business Edition.
+The identity and license key are permanently mapped to the customer's private workspace. Switching tiers dynamically updates quotas without interrupting stored institutional memory.
 
 ---
 
@@ -96,34 +118,54 @@ The identity never changes, even if the user later upgrades to the Business Edit
 ## Version 1 System Design
 
 ```text
-                  SkynetOrg
-
-                       │
-
-              Authentication
-
-                       │
-
-                User Identity
-
-                       │
-
-             Personal Workspace
-
-                       │
-
-            Knowledge Graph Engine
-
-                       │
-
-                      TPG
+                  SkynetOrg Cloud SaaS
+                           │
+               Authentication & Paywall Gate
+                           │
+                 Customer License Key
+                           │
+             Isolated Personal Workspace
+                           │
+             Knowledge Graph Engine (Graph)
+                           │
+                          TPG
 ```
 
-There is only **one active workspace** in Version 1.
+### Strict Paywall & Multi-Tenant Resolution
 
-The user never chooses a workspace because there is nothing to switch.
+Every conversational turn or connector sync flows through `app.api.deps:get_workspace_id`:
 
-Every conversation automatically resolves to the Personal Workspace.
+```text
+               ChatGPT (Actions API) / External Connectors
+                                │
+               Authorization: Bearer tpg_live_...
+                                │
+                                ▼
+       +──────────────────────────────────────────────────+
+       |           FastAPI Gateway (`deps.py`)            |
+       |           Strict Commercial Paywall Gate         |
+       +──────────────────────────────────────────────────+
+                                │
+          ┌─────────────────────┼─────────────────────┐
+          ▼                     ▼                     ▼
+     Key Invalid?          Status Valid?         Quota Valid?
+    [401 Unauthorized]  [402 Payment Required]  [402 Payment Required]
+                        [403 Forbidden]
+                                │ (All Passed)
+                                ▼
+       +──────────────────────────────────────────────────+
+       |   Customer-Isolated Personal Workspace (UUID)    |
+       |       Zero Cross-Tenant Data Leakage Guarantee   |
+       +──────────────────────────────────────────────────+
+                                │
+                                ▼
+       +──────────────────────────────────────────────────+
+       |            Organizational Memory Graph           |
+       +──────────────────────────────────────────────────+
+```
+
+There is only **one active workspace** per subscriber.
+The customer never manages complex tenant switches because their secret license key permanently and securely maps to their isolated product office.
 
 ---
 
@@ -365,18 +407,32 @@ This keeps the MVP intentionally focused.
 | FR-041 | Connect GitHub   |
 | FR-042 | Connect Calendar |
 
+## Commercial Licensing & SaaS Paywall
+
+| ID     | Requirement                                                                 |
+| ------ | --------------------------------------------------------------------------- |
+| FR-043 | Unique cryptographic license key (`tpg_live_<32-hex>`) issued per customer  |
+| FR-044 | Every conversational/API request authenticated via Authorization Bearer token |
+| FR-045 | Automatic 401 Unauthorized for missing, forged, or unrecognized keys       |
+| FR-046 | Strict 402 Payment Required for expired, canceled, or past-due subscriptions|
+| FR-047 | Tier quota enforcement for Knowledge Graph entities and external connectors |
+| FR-048 | Automated Stripe webhook synchronization (`invoice.payment_succeeded`, etc.)|
+| FR-049 | Admin CLI (`scripts/manage_commercial.py`) and REST API for customer ops    |
+
 ---
 
 # 13. Non-Functional Requirements
 
-| Requirement         | Target          |
-| ------------------- | --------------- |
-| Workspace Isolation | 100%            |
-| Cross-user Leakage  | 0               |
-| Retrieval Latency   | Less than 3 sec |
-| Encryption          | AES-256         |
-| Availability        | 99.9%           |
-| Export Capability   | One-click       |
+| Requirement               | Target          |
+| ------------------------- | --------------- |
+| Workspace Isolation       | 100%            |
+| Cross-user Leakage        | 0               |
+| Paywall Gating Latency    | Less than 5 ms  |
+| Retrieval Latency         | Less than 3 sec |
+| Encryption (Transit/Rest) | TLS 1.3 / AES-256 |
+| Availability              | 99.9%           |
+| Export Capability         | One-click JSON  |
+| License Cryptographic Entropy | 128-bit CSPRNG |
 
 ---
 
@@ -388,16 +444,15 @@ A different user attempts to access Abhijith's workspace.
 
 **Expected Behavior**
 
-* Access denied
+* Access denied (401 Unauthorized)
 * Workspace remains undiscoverable
-* No metadata exposed
+* Zero metadata exposed
 
 ---
 
 ## Scenario B — Connector Removed
 
 User asks:
-
 > Summarize today's client emails.
 
 Gmail has been disconnected.
@@ -418,6 +473,41 @@ User chooses to delete the workspace.
 * Connectors revoked
 * Knowledge graph deleted
 * Recovery unavailable after retention window
+
+---
+
+## Scenario D — Expired Commercial License
+
+Customer makes an action request after their subscription period has expired.
+
+**Expected Behavior**
+
+* FastAPI gateway intercepts the request at `app.api.deps:get_workspace_id`.
+* Returns `HTTP 402 Payment Required` with detail: `"Commercial License Inactive: Commercial subscription has expired. Please renew your subscription at https://tpg.skynetorg.com/pricing to continue using TPG."`
+* TPG Custom GPT informs the user courteously with the pricing renewal link.
+* Workspace memory and graph remain preserved and freeze in read-only lock until renewed.
+
+---
+
+## Scenario E — Commercial Tier Quota Exceeded
+
+Customer on Trial tier attempts to store their 501st Knowledge Graph entity, or register a 3rd connector.
+
+**Expected Behavior**
+
+* Request is rejected with `HTTP 402 Payment Required`.
+* Error explicitly reports: `"Entity limit reached (500/500 entities for trial tier). Please upgrade your commercial subscription to store more knowledge."`
+* Previous entities remain safe, accessible, and queryable.
+
+---
+
+## Scenario F — Suspended Account
+
+An account administratively suspended by SkynetOrg attempts an API call.
+
+**Expected Behavior**
+
+* Returns `HTTP 403 Forbidden` with detail: `"Access Denied: Workspace account has been suspended. Please contact support@skynetorg.com."`
 
 ---
 

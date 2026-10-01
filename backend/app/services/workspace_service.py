@@ -110,6 +110,14 @@ class WorkspaceService:
         if not ws:
             return None
 
+        is_valid, _ = ws.is_license_valid()
+        days_remaining = None
+        if ws.valid_until:
+            now = datetime.now(timezone.utc)
+            vu = ws.valid_until if ws.valid_until.tzinfo else ws.valid_until.replace(tzinfo=timezone.utc)
+            delta = vu - now
+            days_remaining = max(0, delta.days)
+
         return {
             "workspace_id": ws.id,
             "name": ws.name,
@@ -117,6 +125,13 @@ class WorkspaceService:
             "owner_name": ws.owner_name,
             "workspace_type": getattr(ws, "workspace_type", "personal"),
             "created_at": ws.created_at.isoformat() if ws.created_at else None,
+            "subscription_tier": ws.subscription_tier,
+            "subscription_status": ws.subscription_status,
+            "valid_until": ws.valid_until.isoformat() if ws.valid_until else None,
+            "days_remaining": days_remaining,
+            "is_license_active": is_valid,
+            "entities_limit": ws.entities_limit,
+            "connectors_limit": ws.connectors_limit,
         }
 
     async def get_aggregated_stats(self) -> dict[str, Any]:

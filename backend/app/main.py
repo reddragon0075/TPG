@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.database import engine, Base
+from app.database import engine, Base, ensure_db_schema
 from app.api.health import router as health_router
 from app.api.memory import router as memory_router
 from app.api.intelligence import router as intelligence_router
@@ -26,6 +26,7 @@ from app.api.strategy import router as strategy_router
 from app import models as _models  # noqa: F401
 from app.api.connectors import router as connectors_router
 from app.api.workspace import router as workspace_router
+from app.api.commercial import router as commercial_router
 
 
 settings = get_settings()
@@ -36,13 +37,17 @@ async def lifespan(app: FastAPI):
     """
     Application lifespan manager.
 
-    Creates database tables on startup (dev mode).
+    Creates database tables and ensures schema compatibility on startup.
     Production should use Alembic migrations.
     """
     # Startup
     if settings.environment == "development":
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        await ensure_db_schema()
+
+    yield
+
+    # Shutdown
+    await engine.dispose()
 
     yield
 
@@ -84,6 +89,7 @@ app.include_router(customer_router)
 app.include_router(strategy_router)
 app.include_router(connectors_router)
 app.include_router(workspace_router)
+app.include_router(commercial_router)
 
 
 # ─── Root ──────────────────────────────────────────────────────
